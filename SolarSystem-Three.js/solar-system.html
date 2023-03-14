@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<title>Solar System</title>
+<script src="three.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="GLTFLoader.js"></script>
+<script>
+
+"use strict";
+
+let canvas, renderer, scene, camera; // Standard three.js requirements.
+
+let controls;  // An OrbitControls object that is used to implement
+               // rotation of the scene using the mouse.  (It actually rotates
+               // the camera around the scene.)
+
+let animating = false;  // Set to true when an animation is in progress.
+let frameNumber = 0;  // Actually elapsed time in animation, in units of 1/60 second.
+
+let mercurryOrbit;
+let venusOrbit;
+let earthOrbit;
+let marsOrbit;
+let jupiterOrbit;
+let saturnOrbit;
+let uranusOrbit;
+let neptuneOrbit;
+  
+let solarSystem;
+let sun;
+let mercurry;
+let venus;
+let earth;
+let mars;
+let jupiter;
+let saturn;
+let ring;
+let uranus;
+let neptune;
+
+let starsCoords = new Float32Array(30000);
+let starCloud;
+  
+  
+/**
+ *  The render function draws the scene.
+ */
+function render() {
+    renderer.render(scene, camera);
+}
+
+/**
+ * This function is called by the init() method to create the world. 
+ */
+function createWorld() {
+    
+    renderer.setClearColor("black"); // Background color for scene.
+    scene = new THREE.Scene();
+    
+    // ------------------- Make a camera with viewpoint light ----------------------
+    
+    scene.add(new THREE.AmbientLight(0xffffff, 0.1));  // Add some ambient illumination.
+    camera = new THREE.PerspectiveCamera(30, canvas.width/canvas.height, 0.1, 100);
+    camera.position.z = 50;
+    let light;  // A light shining from the direction of the camera; moves with the camera.
+    light = new THREE.DirectionalLight();
+    light.position.set(0,1,1);
+    let pointLight = new THREE.PointLight( 0xff0000, 5, 300 );
+    pointLight.position.set( 0, 0, 0 );
+    scene.add(pointLight);
+    camera.add(light); // so light will move with camera (which is moved by the OrbitControls)
+    scene.add(camera);
+    
+    //------------------- Create the scene's visible objects ----------------------
+    solarSystem = new THREE.Object3D();
+    
+    sun =  new THREE.Mesh(
+        new THREE.SphereGeometry(1, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/sun.jpeg?v=1678754311049", sun);
+    solarSystem.add(sun);
+  
+    mercurry =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.03, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    mercurry.position.x = 1.5;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/mercurry.png?v=1678754316540", mercurry);
+    mercurryOrbit = new THREE.Object3D();
+    mercurryOrbit.add(mercurry);
+    solarSystem.add(mercurryOrbit);
+    
+    venus =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.08, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    venus.position.x = -2;
+    venus.position.z = 0;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/venus.jpg?v=1678754305753", venus);    
+    venusOrbit = new THREE.Object3D();
+    venusOrbit.add(venus);
+    solarSystem.add(venusOrbit);
+  
+    earth =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.09, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    earth.position.x = 3;
+    earth.position.z = 0;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/earth.jpg?v=1678754421576", earth); 
+    earthOrbit = new THREE.Object3D();
+    earthOrbit.add(earth);
+    solarSystem.add(earthOrbit);
+  
+    mars =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.04, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    mars.position.x = -6;
+    mars.position.z = -2;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/mars.jpg?v=1678754302036", mars);
+    marsOrbit = new THREE.Object3D();
+    marsOrbit.add(mars);
+    solarSystem.add(marsOrbit);
+  
+    jupiter =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.1, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    jupiter.position.x = -9;
+    jupiter.position.z = -2;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/jupiter.jpg?v=1678754296731", jupiter);
+    jupiterOrbit = new THREE.Object3D();
+    jupiterOrbit.add(jupiter);
+    solarSystem.add(jupiterOrbit);
+  
+    saturn =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.8, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    saturn.position.x = 10;
+    saturn.position.z = 3;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/saturn.jpg?v=1678754424674", saturn);
+    ring =  new THREE.Mesh( 
+        new THREE.RingGeometry(0.5, 1.7, 64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    ring.position.x = 10;
+    ring.position.z = 3;
+    ring.rotation.x = 2;
+    saturnOrbit = new THREE.Object3D();
+    saturnOrbit.add(saturn);
+    saturnOrbit.add(ring);
+    solarSystem.add(saturnOrbit);
+  
+    uranus =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.3, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    uranus.position.x = -12;
+    uranus.position.z = -4;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/uranus.jpg?v=1678754292367", uranus);
+    uranusOrbit = new THREE.Object3D();
+    uranusOrbit.add(uranus);
+    solarSystem.add(uranusOrbit);
+  
+    neptune =  new THREE.Mesh( 
+        new THREE.SphereGeometry(0.3, 64,64),
+        new THREE.MeshPhongMaterial({
+            color: 0x66BBFF,
+            specular: 0x222222,
+            shininess: 16,
+            flatShading: true
+        })
+    );
+    neptune.position.x = 15;
+    neptune.position.z = -4;
+    loadTextureFor("https://cdn.glitch.global/3245a8de-c602-480f-ab4c-148f810468d2/neptune.jpg?v=1678754288687", neptune);
+    neptuneOrbit = new THREE.Object3D();
+    neptuneOrbit.add(neptune);
+    solarSystem.add(neptuneOrbit);
+    drawStarsCloud();
+    solarSystem.scale.set(3,3,3);
+    scene.add(solarSystem);
+} // end function createWorld()
+
+function drawStarsCloud(){
+  let i = 0;
+  while(i < 10000){
+    let x = (32 * Math.random())- 8;
+    let y = (32 * Math.random()) - 8;
+    let z = (32 * Math.random()) - 8;
+    if(x**2 + y**2 + z**2 < 284){
+      starsCoords[3 * i] = x;
+      starsCoords[3 * i + 1] = y;
+      starsCoords[3 * i + 2] = z;
+      i++;
+    }
+  }
+  let pointsGeom = new THREE.BufferGeometry();
+  pointsGeom.setAttribute("position",new THREE.BufferAttribute(starsCoords,3));
+  pointsGeom.setAttribute("color", new THREE.BufferAttribute(starsCoords,3));
+  pointsGeom.setDrawRange(0,1500);
+  let material;
+  material = new THREE.PointsMaterial({
+            color: "white",
+            size: 0.5,
+            sizeAttenuation: false
+        });
+  starCloud = new THREE.Points(pointsGeom,material); 
+  solarSystem.add(starCloud);
+}
+
+/**
+ *  This function is called once for each frame of the animation, before
+ *  the render() function is called for that frame.  It updates any
+ *  animated properties.  The value of the global variable frameNumber
+ *  is actually the elapsed time in the animation, in units of 1/60 seconds.
+ */
+function updateForFrame() {
+    mercurryOrbit.rotation.y += 0.0047;
+    venusOrbit.rotation.y += 0.0035;
+    earthOrbit.rotation.y += 0.0029;
+    marsOrbit.rotation.y += 0.0024;
+    jupiterOrbit.rotation.y += 0.0013;
+    saturnOrbit.rotation.y += 0.00097;
+    uranusOrbit.rotation.y += 0.00069
+    neptuneOrbit.rotation.y += 0.00048;
+}    
+
+/**
+ * Start loading a texture from imageURL.  If additional parameeters are
+ * present, they must be THREE.Object3D's, and the map property of each
+ * object's material is set to the newly loaded texture.  The return
+ * value of the function is the texture, to allow it to be used elsewhere.
+ */
+function loadTextureFor(imageURL, ...objects) {
+    function callback() {
+        for (let object of objects) {
+            object.material.map = texture;
+            object.material.needsUpdate = true;
+        }
+        render();  // render scene with texture that has just been loaded.
+    }
+    let loader = new THREE.TextureLoader();
+    let texture = loader.load(imageURL, callback);
+    return texture;
+}
+
+
+/* ---------------------------- ANIMATION SUPPORT --------------------- */
+
+let previousTime; // time when doFrame was last called
+
+/*  Called when user changes setting of the Animate checkbox. */
+function doAnimateCheckbox() {
+   let run = document.getElementById("animateCheckbox").checked;
+   if (run != animating) {
+       animating = run;
+       if (animating) {
+           previousTime = -1; // for starting or restarting the animation
+           requestAnimationFrame(doFrame);
+       }
+   }
+}
+
+/*  Drives the animation, called by system through requestAnimationFrame() */
+function doFrame() {
+    if (animating) {
+        let time = Date.now();
+        if (previousTime !== -1) {
+            let elapsedTime = (time - previousTime)/1000; // time in seconds since previous frame
+            frameNumber += elapsedTime*60; // elapsed time in units of 1/60 seconds
+            updateForFrame();
+            render();
+        }
+        previousTime = time;
+        requestAnimationFrame(doFrame);
+    }
+}
+
+/*----------------------------- INITIALIZATION ----------------------------------------
+
+/**
+ *  This function is called by the onload event so it will run after the
+ *  page has loaded.  It creates the renderer, canvas, and scene objects,
+ *  calls createWorld() to add objects to the scene, and renders the
+ *  initial view of the scene.  If an error occurs, it is reported.
+ */
+function init() {
+    try {
+        canvas = document.getElementById("glcanvas");
+        renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+            alpha: false
+        });
+    }
+    catch (e) {
+        document.getElementById("message").innerHTML="<b>Sorry, an error occurred:<br>" +
+                e + "</b>";
+        return;
+    }
+    document.getElementById("animateCheckbox").checked = false;
+    document.getElementById("animateCheckbox").onchange = doAnimateCheckbox;
+    document.getElementById("reset").onclick = function() { controls.reset(); };
+    createWorld();
+    controls = new THREE.OrbitControls(camera,canvas);
+    controls.enablePan = false
+    controls.enableZoom = true
+    controls.addEventListener("change", render);
+    render();
+}
+
+window.onload = init;  // arrange for init() to be called when the page loads.
+
+</script>
+</head>
+<body>
+
+<h2>Solar System</h2>
+
+<noscript>
+   <p style="color: #AA0000; font-weight: bold">Sorry, but this page requires JavaScript!</p>
+</noscript>
+
+<p style="color:#AA0000; font-weight: bold" id="message">
+</p>
+
+<p>
+  <b style="margin-left:50px">Use your left mouse click to rotate the model.</b>
+</p>
+<p>  
+  <b style="margin-left:50px">Use your middle mouse to zoom in and out the model.</b>
+</p>
+
+   <label><input type="checkbox" id="animateCheckbox" style="margin-left:50px"><b>Animate</b></label>
+   <button style="margin-left: 50px" id="reset">Reset Rotation</button>
+</p>
+
+<div id="canvas-holder" style="float: left; background-color: black">
+   <canvas width=2000 height=800 id="glcanvas"></canvas>
+</div>
+
+</body>
+</html>
