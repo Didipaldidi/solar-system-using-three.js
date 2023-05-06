@@ -14,6 +14,9 @@ Here is the live site link: https://solar-system-model-with-three-js.glitch.me
 
 ← `OrbitControls.js`: File use to control the movement of the camere in this project
 
+
+![image](https://user-images.githubusercontent.com/64215294/236588012-9c69b3ea-be0e-46af-adb9-7771b54631cd.png)
+
 ```
 
 ## You built this with Glitch!
