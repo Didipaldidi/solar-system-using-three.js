@@ -1,7 +1,7 @@
 # Solar System model with Three.js
 This is a basic website that tries to create a 3D model of the solar system using Three.js.
 
-##How to get started:
+## How to get started:
 To run the program you can use the glitch.com website, after creating a new project, you can copy this files:
 - the solar-system.html file
 - three.js file
